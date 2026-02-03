@@ -1,7 +1,8 @@
 # DFBrowser
 ## This is our first self-made Browser .
 # V.2.1 GETS RELEASED ON 4.2.2026 15:00 .
-## Sry.. you need wait for V.2.1 😢.
+## Sry.. you need wait to for V.2.1 😢.
+What we are building in we are gonna build in new extensions like downloading and history so you can't hide your things from your parents.
 # V.1.1 GOT RELEASED.
 This is the beginning of DFBrowser!
 V.1.1 is specially just a normal Browser.
