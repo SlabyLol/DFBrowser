@@ -9,11 +9,9 @@ import json
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QTabWidget, QToolBar,
     QAction, QLineEdit, QFileDialog, QDialog,
-    QLabel, QPushButton, QVBoxLayout, QMessageBox
+    QLabel, QPushButton, QVBoxLayout
 )
-from PyQt5.QtWebEngineWidgets import (
-    QWebEngineView, QWebEngineProfile, QWebEnginePage
-)
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile, QWebEnginePage
 from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor
 from PyQt5.QtCore import QUrl, QStandardPaths
 
@@ -23,11 +21,7 @@ from PyQt5.QtCore import QUrl, QStandardPaths
 # ==================================================
 APPDATA = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
 CONFIG_PATH = os.path.join(APPDATA, "dfbrowser_config.json")
-
-DEFAULT_CONFIG = {
-    "homepage": ""
-}
-
+DEFAULT_CONFIG = {"homepage": ""}
 
 def load_config():
     if not os.path.exists(CONFIG_PATH):
@@ -35,7 +29,6 @@ def load_config():
         return DEFAULT_CONFIG.copy()
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
-
 
 def save_config(cfg):
     os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
@@ -50,15 +43,9 @@ class AdBlocker(QWebEngineUrlRequestInterceptor):
     def __init__(self):
         super().__init__()
         self.blocked_domains = [
-            "doubleclick.net",
-            "googlesyndication.com",
-            "googleadservices.com",
-            "adsystem.com",
-            "adservice.",
-            "analytics",
-            "tracking",
-            "facebook.net",
-            "fbcdn.net"
+            "doubleclick.net", "googlesyndication.com", "googleadservices.com",
+            "adsystem.com", "adservice.", "analytics", "tracking",
+            "facebook.net", "fbcdn.net"
         ]
 
     def interceptRequest(self, info):
@@ -77,13 +64,10 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Settings")
         self.setFixedSize(420, 160)
-
         label = QLabel("Start page URL or local HTML file path:")
         self.input = QLineEdit(homepage)
-
         save_btn = QPushButton("Save")
         save_btn.clicked.connect(self.accept)
-
         layout = QVBoxLayout(self)
         layout.addWidget(label)
         layout.addWidget(self.input)
@@ -102,16 +86,10 @@ class BrowserPage(QWebEnginePage):
         self.main_window = main_window
         self.fullScreenRequested.connect(self.handle_fullscreen)
         self.pending_danger_url = None
-
-        # simple local danger keywords
         self.danger_keywords = [
-            "malware",
-            "phishing",
-            "keygen",
-            "crack",
-            "free-money",
-            "hacked"
+            "malware", "phishing", "keygen", "crack", "free-money", "hacked", "virus"
         ]
+        self.loadFinished.connect(self.check_page_content)
 
     def handle_fullscreen(self, request):
         request.accept()
@@ -122,85 +100,55 @@ class BrowserPage(QWebEnginePage):
 
     def acceptNavigationRequest(self, url, nav_type, is_main_frame):
         url_str = url.toString().lower()
-
-        # Internal start page
         if url.scheme() == "df" and url.host() == "start":
             self.setHtml(self.start_page_html(), QUrl("df://start"))
             return False
-
-        # User accepted risk
         if url.scheme() == "df" and url.host() == "continue":
             if self.pending_danger_url:
                 real = self.pending_danger_url
                 self.pending_danger_url = None
                 self.setUrl(real)
             return False
-
-        # Dangerous site detection
-        if is_main_frame and any(k in url_str for k in self.danger_keywords):
-            self.pending_danger_url = url
-            self.setHtml(self.danger_page_html(url_str), QUrl("df://warning"))
-            return False
-
         return super().acceptNavigationRequest(url, nav_type, is_main_frame)
+
+    def check_page_content(self, ok):
+        if not ok:
+            return
+        self.toHtml(self.inspect_html)
+
+    def inspect_html(self, html):
+        if any(word in html.lower() for word in self.danger_keywords):
+            self.pending_danger_url = self.url()
+            self.setHtml(self.danger_page_html(self.url().toString()), QUrl("df://warning"))
 
     def start_page_html(self):
         return """
-        <html>
-        <body style="background:#121212;color:white;
-                     font-family:Arial;
-                     display:flex;
-                     flex-direction:column;
-                     justify-content:center;
-                     align-items:center;
-                     height:100vh;">
-            <h1>Welcome back to DFBrowser</h1>
-            <p style="color:#888;position:absolute;bottom:20px;">
-                An idea by DarkFox Co.
-            </p>
-        </body>
-        </html>
+        <html><body style="background:#121212;color:white;
+        display:flex;flex-direction:column;justify-content:center;
+        align-items:center;height:100vh;font-family:Arial;">
+        <h1>Welcome back to DFBrowser</h1>
+        <p style="color:#888;position:absolute;bottom:20px;">
+        An idea by DarkFox Co.</p>
+        </body></html>
         """
 
     def danger_page_html(self, url):
         return f"""
-        <html>
-        <body style="
-            background:#b00000;
-            color:white;
-            font-family:Arial;
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            align-items:center;
-            height:100vh;
-            text-align:center;
-            padding:40px;">
-            
-            <h1 style="font-size:40px;margin-bottom:20px;">
-                WARNING THIS IS A DANGEROUS SITE
-            </h1>
-
-            <h2 style="margin-bottom:30px;">
-                DFBROWSER IS TRYING TO HELP YOU
-            </h2>
-
-            <p style="opacity:0.9;margin-bottom:40px;">
-                {url}
-            </p>
-
-            <a href="df://continue"
-               style="
-                background:#000;
-                color:white;
-                padding:15px 30px;
-                text-decoration:none;
-                font-size:16px;
-                border-radius:5px;">
-                I am accepting the risk and I am continuing
-            </a>
-        </body>
-        </html>
+        <html><body style="background:#b00000;color:white;
+        display:flex;flex-direction:column;justify-content:center;
+        align-items:center;height:100vh;font-family:Arial;text-align:center;
+        padding:40px;">
+        <h1 style="font-size:40px;margin-bottom:20px;">
+        WARNING THIS IS A DANGEROUS SITE
+        </h1>
+        <h2 style="margin-bottom:30px;">DFBROWSER IS TRYING TO HELP YOU</h2>
+        <p style="opacity:0.9;margin-bottom:40px;">{url}</p>
+        <a href="df://continue"
+        style="background:#000;color:white;padding:15px 30px;
+        text-decoration:none;font-size:16px;border-radius:5px;">
+        I am accepting the risk and I am continuing
+        </a>
+        </body></html>
         """
 
 
@@ -212,7 +160,6 @@ class DarkFoxBrowser(QMainWindow):
         super().__init__()
         self.config = load_config()
         self.fullscreen = False
-
         self.setWindowTitle("DFBrowser")
         self.setGeometry(100, 100, 1300, 850)
 
@@ -231,7 +178,6 @@ class DarkFoxBrowser(QMainWindow):
 
         bar = QToolBar()
         self.addToolBar(bar)
-
         bar.addAction("Back", lambda: self.current().back())
         bar.addAction("Forward", lambda: self.current().forward())
         bar.addAction("Reload", lambda: self.current().reload())
@@ -263,7 +209,6 @@ class DarkFoxBrowser(QMainWindow):
 
         i = self.tabs.addTab(view, "New Tab")
         self.tabs.setCurrentIndex(i)
-
         view.urlChanged.connect(lambda u: self.urlbar.setText(u.toString()))
         view.loadFinished.connect(lambda: self.tabs.setTabText(i, view.page().title()))
 
