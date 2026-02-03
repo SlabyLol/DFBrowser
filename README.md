@@ -1,4 +1,5 @@
 # DFBrowser
+## When you have some Questions send an e-mail to darkfox.tobias@outlook.com (Would ## be better) Or to darkfox.simon@outlook.com or darkfox.ramon@outlook.com
 ## This is our first self-made Browser .
 # V.2.1 GETS RELEASED ON 4.2.2026 15:00 .
 ## Sry.. you need wait to for V.2.1 😢.
