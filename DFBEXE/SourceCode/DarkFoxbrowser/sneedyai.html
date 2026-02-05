@@ -14,16 +14,15 @@ input { padding:15px;border:none;font-size:16px;width:100%;background:#111;color
 </head>
 <body>
 <div id="chat"></div>
-<input id="input" placeholder="Ask SneedyAI and press Enter" disabled>
+<input id="input" placeholder="Ask SneedyAI and press Enter">
+
 <script>
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
-input.disabled = true;
 
-let backend;
+let backend = null;
 new QWebChannel(qt.webChannelTransport, channel => {
     backend = channel.objects.sneedy;
-    input.disabled = false; // jetzt kann der Benutzer schreiben
 });
 
 input.addEventListener("keydown", async e => {
@@ -34,10 +33,10 @@ input.addEventListener("keydown", async e => {
         if (backend) {
             const reply = await backend.ask(msg);
             chat.innerHTML += `<div class="msg-ai">SneedyAI: ${reply}</div>`;
-            chat.scrollTop = chat.scrollHeight;
         } else {
-            chat.innerHTML += `<div class="msg-ai">Error: backend not loaded</div>`;
+            chat.innerHTML += `<div class="msg-ai">Waiting for backend...</div>`;
         }
+        chat.scrollTop = chat.scrollHeight;
     }
 });
 </script>
