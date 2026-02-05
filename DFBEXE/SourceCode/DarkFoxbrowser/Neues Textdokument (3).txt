@@ -1,3 +1,4 @@
-pyinstaller --noconfirm --onefile --windowed --icon=icondfb.icon --add-data "dfbstartbg.png;." --add-data "sneedyai_backend.py;." --add-data "sneedyai.html;." DFBrowser.py
+pyinstaller --noconfirm --onefile --windowed --icon=icondfb.ico --add-data "dfbstartbg.png;." --add-data "sneedyai_backend.py;." --add-data "sneedyai.html;." DFBrowser.py
+
 
 
